@@ -242,7 +242,7 @@
         <div class="status-info">
           <span>الغرفة: <strong id="display-room-id">------</strong></span>
           <span>المرحلة: <strong id="display-stage">الانتظار</strong></span>
-          <span>الوقت: <strong id="display-timer">--</strong>ث</span>
+          <span>الوقت: <strong id="display-timer">60</strong>ث</span>
         </div>
         
         <div id="host-controls">
@@ -336,6 +336,7 @@
       let isHost = false;
       let roomRef = null;
       let myRole = "";
+      let timerInterval = null;
 
       createBtn.addEventListener('click', () => {
         const name = usernameInput.value.trim();
@@ -348,6 +349,7 @@
         roomRef = db.ref('rooms/' + currentRoomId);
         roomRef.set({
           stage: 'LOBBY',
+          timer: 60,
           mafiaCount: 1,
           createdAt: Date.now()
         }).then(() => {
@@ -399,17 +401,19 @@
           if (!data) return;
 
           displayStage.innerText = translateStage(data.stage);
+          if (data.timer !== undefined) {
+            displayTimer.innerText = data.timer;
+          }
 
           if (data.players) {
             const playersList = Object.values(data.players);
             renderTable(playersList);
 
-            // التحقق من دور اللاعب الحالي وتحديثه عبر السيرفر
             if (data.players[playerId]) {
               const newRole = data.players[playerId].role;
               if (newRole && newRole !== myRole) {
                 myRole = newRole;
-                if (data.stage === 'ROLE_REVEAL') {
+                if (data.stage === 'ROLE_REVEAL' || data.stage === 'DISCUSSION') {
                   showRoleCard(myRole);
                 }
               }
@@ -429,7 +433,7 @@
         });
       }
 
-      // المضيف يوزع الأدوار مركزياً ويحفظها في السيرفر لجميع اللاعبين
+      // بدء المباراة وإدارة المؤقت الدوري عبر المضيف
       startGameBtn.addEventListener('click', () => {
         if (!isHost) return;
 
@@ -450,21 +454,54 @@
 
           roles.sort(() => Math.random() - 0.5);
 
-          // تحديث الأدوار لكل لاعب داخل Firebase فوراً لتصل لكل الأجهزة
           const updates = {};
           pIds.forEach((id, idx) => {
             updates[`players/${id}/role`] = roles[idx];
           });
           updates['stage'] = 'ROLE_REVEAL';
+          updates['timer'] = 10; // 10 ثوانٍ لكشف الأدوار
 
           roomRef.update(updates);
 
           roomRef.child('chat').push({
             type: 'system',
-            text: 'بدأت المباراة الحقيقية! تم توزيع الأدوار على جميع اللاعبين.'
+            text: 'بدأت اللعبة! تم توزيع الأدوار. تفقد بطاقتك السرية.'
           });
+
+          startHostGameLoop();
         });
       });
+
+      // حلقة تنظيم المراحل والمؤقت للمضيف
+      function startHostGameLoop() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+          roomRef.child('timer').transaction((currentTimer) => {
+            if (currentTimer === null || currentTimer <= 1) {
+              // انتهاء الوقت، الانتقال للمرحلة التالية
+              roomRef.once('value', (snap) => {
+                const data = snap.val();
+                if (!data) return;
+
+                if (data.stage === 'ROLE_REVEAL' || data.stage === 'NIGHT') {
+                  roomRef.update({ stage: 'DISCUSSION', timer: 45 });
+                  roomRef.child('chat').push({ type: 'system', text: 'بدأت مرحلة النقاش الحرة بين اللاعبين 💬' });
+                } else if (data.stage === 'DISCUSSION') {
+                  roomRef.update({ stage: 'VOTING', timer: 25 });
+                  roomRef.child('chat').push({ type: 'system', text: 'بدأت مرحلة التصويت لاختيار المشتبه به 🗳️' });
+                } else if (data.stage === 'VOTING') {
+                  roomRef.update({ stage: 'NIGHT', timer: 30 });
+                  roomRef.child('chat', text => {});
+                  roomRef.child('chat').push({ type: 'system', text: 'حل الظلام... بدأت مرحلة الليل 🌙' });
+                }
+              });
+              return 45;
+            }
+            return currentTimer - 1;
+          });
+        }, 1000);
+      }
 
       closeRoleBtn.addEventListener('click', () => {
         roleCardModal.classList.add('hidden');
@@ -554,7 +591,7 @@
       }
 
       function translateStage(stage) {
-        const map = { LOBBY: 'الانتظار', ROLE_REVEAL: 'كشف الأدوار', NIGHT: 'الليل 🌙', INVESTIGATION: 'التحقيق 🔍', DISCUSSION: 'النقاش 💬', VOTING: 'التصويت 🗳️', GAME_OVER: 'انتهاء الجولة' };
+        const map = { LOBBY: 'الانتظار', ROLE_REVEAL: 'كشف الأدوار', NIGHT: 'الليل 🌙', DISCUSSION: 'النقاش 💬', VOTING: 'التصويت 🗳️', GAME_OVER: 'انتهاء الجولة' };
         return map[stage] || stage;
       }
 
