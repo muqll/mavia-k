@@ -15,7 +15,6 @@
       --btn-gray: #4b5563;
       --btn-gray-hover: #374151;
       --accent-gold: #fbbf24;
-      /* تم تحديث مسار الخلفية ليطابق مجلد public */
       --custom-bg-image: url('public/assets/images/ui/bg.jpg'); 
     }
 
@@ -36,7 +35,6 @@
     .screen { display: none; width: 100%; min-height: 100vh; }
     .screen.active { display: flex; flex-direction: column; }
 
-    /* شاشة الدخول */
     .center-card {
       margin: auto;
       width: 90%;
@@ -79,7 +77,6 @@
     .btn-gray:hover { background: var(--btn-gray-hover); }
     .btn.primary { width: 100%; background: var(--btn-purple); }
 
-    /* شريط العنوان المرن */
     #status-bar {
       background: rgba(0, 0, 0, 0.65);
       padding: 0.8rem 1.2rem; display: flex; flex-wrap: wrap;
@@ -98,7 +95,6 @@
       color: white; text-align: center; font-size: 1.1rem; font-weight: 700;
     }
 
-    /* تخطيط اللعبة */
     #game-layout {
       flex: 1;
       display: flex;
@@ -110,7 +106,6 @@
       width: 100%;
     }
 
-    /* الطاولة المصغرة المنظمة */
     #mini-table-section {
       position: relative;
       width: 100%;
@@ -159,7 +154,6 @@
     .player-seat.dead .player-avatar { filter: grayscale(100%) opacity(0.3); }
     .player-name { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
 
-    /* الشات الرئيسي */
     #chat-section {
       flex: 1;
       display: flex;
@@ -211,7 +205,6 @@
       border-top: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* نافذة كشف الدور */
     #role-card-modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); display: flex; align-items: center;
@@ -411,8 +404,16 @@
             const playersList = Object.values(data.players);
             renderTable(playersList);
 
-            const me = data.players[playerId];
-            if (me && me.role) myRole = me.role;
+            // التحقق من دور اللاعب الحالي وتحديثه عبر السيرفر
+            if (data.players[playerId]) {
+              const newRole = data.players[playerId].role;
+              if (newRole && newRole !== myRole) {
+                myRole = newRole;
+                if (data.stage === 'ROLE_REVEAL') {
+                  showRoleCard(myRole);
+                }
+              }
+            }
           }
         });
       }
@@ -428,6 +429,7 @@
         });
       }
 
+      // المضيف يوزع الأدوار مركزياً ويحفظها في السيرفر لجميع اللاعبين
       startGameBtn.addEventListener('click', () => {
         if (!isHost) return;
 
@@ -448,20 +450,19 @@
 
           roles.sort(() => Math.random() - 0.5);
 
+          // تحديث الأدوار لكل لاعب داخل Firebase فوراً لتصل لكل الأجهزة
+          const updates = {};
           pIds.forEach((id, idx) => {
-            roomRef.child('players/' + id).update({ role: roles[idx] });
+            updates[`players/${id}/role`] = roles[idx];
           });
+          updates['stage'] = 'ROLE_REVEAL';
 
-          roomRef.update({ stage: 'ROLE_REVEAL' });
+          roomRef.update(updates);
 
           roomRef.child('chat').push({
             type: 'system',
-            text: 'بدأت المباراة الحقيقية! جاري كشف الأدوار...'
+            text: 'بدأت المباراة الحقيقية! تم توزيع الأدوار على جميع اللاعبين.'
           });
-
-          setTimeout(() => {
-            showRoleCard(myRole);
-          }, 500);
         });
       });
 
@@ -541,7 +542,7 @@
 
       function appendSystemMessage(text) {
         const msg = document.createElement('div');
-        msg.className, 'chat-msg system';
+        msg.className = 'chat-msg system';
         msg.innerHTML = `<strong>النظام:</strong> ${escapeHtml(text)}`;
         chatMessages.appendChild(msg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
