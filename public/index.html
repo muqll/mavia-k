@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mafia Online - لعبة المافيا</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap">
+  
+  <style>
+    :root {
+      --text-main: #ffffff;
+      --text-muted: #d1d5db;
+      --btn-purple: #7c3aed;
+      --btn-purple-hover: #6d28d9;
+      --btn-gray: #4b5563;
+      --btn-gray-hover: #374151;
+      --accent-gold: #fbbf24;
+      --custom-bg-image: url('assets/images/ui/bg.jpg'); 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', system-ui, sans-serif; }
+
+    body {
+      background-image: var(--custom-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text-main);
+      direction: rtl;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen { display: none; width: 100%; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* شاشة الدخول */
+    .center-card {
+      margin: auto;
+      width: 90%;
+      max-width: 400px;
+      background: rgba(15, 15, 20, 0.6);
+      padding: 2rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .center-card h1 {
+      color: #a78bfa;
+      font-size: 2.2rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+    }
+
+    .form-group { margin-bottom: 1rem; text-align: right; }
+    .form-group label { display: block; font-size: 1rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .form-group input {
+      width: 100%; padding: 0.8rem 1rem; border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0, 0, 0, 0.5);
+      color: white; outline: none; font-size: 1.1rem;
+    }
+
+    .form-group.inline { display: flex; gap: 0.5rem; }
+    hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.2); margin: 1.2rem 0; }
+
+    .btn {
+      padding: 0.7rem 1.4rem; border: none; border-radius: 8px; cursor: pointer;
+      font-weight: 700; font-size: 1.1rem; color: white; transition: 0.2s;
+      white-space: nowrap;
+    }
+    .btn-purple { background: var(--btn-purple); }
+    .btn-purple:hover { background: var(--btn-purple-hover); }
+    .btn-gray { background: var(--btn-gray); }
+    .btn-gray:hover { background: var(--btn-gray-hover); }
+    .btn.primary { width: 100%; background: var(--btn-purple); }
+
+    /* شريط العنوان المرن */
+    #status-bar {
+      background: rgba(0, 0, 0, 0.65);
+      padding: 0.8rem 1.2rem; display: flex; flex-wrap: wrap;
+      gap: 1rem; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      z-index: 20;
+    }
+
+    .status-info { display: flex; gap: 1.2rem; align-items: center; font-size: 1.1rem; font-weight: 700; }
+    .status-info strong { color: var(--accent-gold); font-size: 1.2rem; }
+
+    #host-controls { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; font-weight: 700; }
+    #host-controls input {
+      width: 55px; padding: 0.4rem; border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(0, 0, 0, 0.6);
+      color: white; text-align: center; font-size: 1.1rem; font-weight: 700;
+    }
+
+    /* تخطيط اللعبة */
+    #game-layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      padding: 0.8rem;
+      max-width: 650px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* الطاولة المصغرة */
+    #mini-table-section {
+      position: relative;
+      width: 100%;
+      height: 170px;
+      background: rgba(15, 15, 20, 0.4);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #mafia-table {
+      position: absolute;
+      width: 60%;
+      height: 60%;
+      background: rgba(28, 18, 12, 0.7);
+      border: 5px solid rgba(74, 40, 24, 0.9);
+      border-radius: 100px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    #players-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0; left: 0;
+    }
+
+    .player-seat {
+      position: absolute;
+      width: 65px;
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+
+    .player-avatar {
+      width: 45px; height: 45px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-gold);
+      background: #222;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+    }
+    .player-seat.dead .player-avatar { filter: grayscale(100%) opacity(0.3); }
+    .player-name { font-size: 0.85rem; font-weight: 700; margin-top: 0.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+
+    /* الشات الرئيسي */
+    #chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(10, 10, 15, 0.75);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      min-height: 300px;
+    }
+
+    .chat-header { padding: 0.7rem 1rem; background: rgba(0, 0, 0, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .chat-header h3 { color: #c4b5fd; font-size: 1.1rem; font-weight: 900; }
+
+    .messages-container {
+      flex: 1; padding: 1rem; overflow-y: auto; display: flex;
+      flex-direction: column; gap: 0.8rem; max-height: 45vh;
+    }
+
+    .chat-msg {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.8rem 1.1rem;
+      border-radius: 10px;
+      max-width: 95%;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .chat-msg.system {
+      background: rgba(124, 58, 237, 0.35);
+      border-right: 5px solid var(--btn-purple);
+      width: 100%;
+      font-size: 1.25rem;
+      color: #fef08a;
+    }
+
+    #chat-form { display: flex; padding: 0.6rem; background: rgba(0, 0, 0, 0.5); gap: 0.5rem; }
+    #chat-input {
+      flex: 1; padding: 0.7rem 1rem; border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6);
+      color: white; outline: none; font-size: 1.1rem; font-weight: 600;
+    }
+
+    #action-panel {
+      padding: 0.8rem;
+      background: rgba(0,0,0,0.8);
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* نافذة كشف الدور */
+    #role-card-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); display: flex; align-items: center;
+      justify-content: center; z-index: 999;
+    }
+    .role-card-box {
+      background: rgba(20, 20, 30, 0.95); border: 2px solid var(--btn-purple);
+      padding: 1.5rem; border-radius: 16px; text-align: center; max-width: 280px;
+    }
+    .role-card-img { width: 160px; height: 210px; object-fit: cover; border-radius: 10px; margin: 0.8rem 0; border: 1px solid rgba(255,255,255,0.2); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="auth-screen" class="screen active">
+      <div class="card center-card">
+        <h1>MAFIA ONLINE</h1>
+        <div class="form-group">
+          <label>اسم اللاعب:</label>
+          <input type="text" id="username-input" placeholder="أدخل اسمك..." maxlength="15">
+        </div>
+        <button id="create-btn" class="btn primary btn-purple">إنشاء غرفة جديدة</button>
+        <hr>
+        <div class="form-group inline">
+          <input type="text" id="room-id-input" placeholder="رمز الغرفة">
+          <button id="join-btn" class="btn btn-gray">انضمام</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+      <header id="status-bar">
+        <div class="status-info">
+          <span>الغرفة: <strong id="display-room-id">------</strong></span>
+          <span>المرحلة: <strong id="display-stage">الانتظار</strong></span>
+          <span>الوقت: <strong id="display-timer">--</strong>ث</span>
+        </div>
+        
+        <div id="host-controls">
+          <label>مافيا:</label>
+          <input type="number" id="mafia-count-input" min="1" value="1">
+          <button id="start-game-btn" class="btn btn-purple">بدء المباراة</button>
+        </div>
+      </header>
+
+      <main id="game-layout">
+        <section id="mini-table-section">
+          <div id="mafia-table"></div>
+          <div id="players-ring"></div>
+        </section>
+
+        <section id="chat-section">
+          <div class="chat-header">
+            <h3>محادثة اللعبة الرئيسية</h3>
+          </div>
+          <div id="chat-messages" class="messages-container"></div>
+          <form id="chat-form">
+            <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+            <button type="submit" class="btn btn-purple">إرسال</button>
+          </form>
+
+          <div id="action-panel" class="hidden">
+            <p id="action-title" style="margin-bottom:0.5rem; color:var(--accent-gold); font-size: 1.1rem; font-weight:700;"></p>
+            <div id="action-buttons"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="role-card-modal" class="hidden">
+      <div class="role-card-box">
+        <h3 style="color:var(--accent-gold);">دورك السري</h3>
+        <img id="role-card-img" class="role-card-img" src="" alt="بطاقة الدور">
+        <h4 id="role-card-name" style="color:white; margin-bottom:0.8rem;"></h4>
+        <button id="close-role-btn" class="btn btn-purple">فهمت دوري</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- مكتبات Firebase JS SDK (v8) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // تم وضع المفاتيح الخاصة بمشروعك (mafia-game-cf1fc)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0LSflXoZU4QuJCBSOaP9LuinK5HJJL_M",
+      authDomain: "mafia-game-cf1fc.firebaseapp.com",
+      databaseURL: "https://mafia-game-cf1fc-default-rtdb.firebaseio.com",
+      projectId: "mafia-game-cf1fc",
+      storageBucket: "mafia-game-cf1fc.firebasestorage.app",
+      messagingSenderId: "185913315023",
+      appId: "1:185913315023:web:a937a2f44915b6aeb5f1ba",
+      measurementId: "G-0ND7JNTLQM"
+    };
+
+    // تهيئة Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const authScreen = document.getElementById('auth-screen');
+      const gameScreen = document.getElementById('game-screen');
+      const usernameInput = document.getElementById('username-input');
+      const createBtn = document.getElementById('create-btn');
+      const joinBtn = document.getElementById('join-btn');
+      const roomIdInput = document.getElementById('room-id-input');
+
+      const displayRoomId = document.getElementById('display-room-id');
+      const displayStage = document.getElementById('display-stage');
+      const displayTimer = document.getElementById('display-timer');
+      const startGameBtn = document.getElementById('start-game-btn');
+      const mafiaCountInput = document.getElementById('mafia-count-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const chatForm = document.getElementById('chat-form');
+      const chatInput = document.getElementById('chat-input');
+      const playersRing = document.getElementById('players-ring');
+      const actionPanel = document.getElementById('action-panel');
+      const actionTitle = document.getElementById('action-title');
+      const actionButtons = document.getElementById('action-buttons');
+
+      const roleCardModal = document.getElementById('role-card-modal');
+      const roleCardImg = document.getElementById('role-card-img');
+      const roleCardName = document.getElementById('role-card-name');
+      const closeRoleBtn = document.getElementById('close-role-btn');
+
+      let currentUser = "";
+      let currentRoomId = "";
+      let playerId = "";
+      let isHost = false;
+      let roomRef = null;
+      let myRole = "";
+
+      createBtn.addEventListener('click', () => {
+        const name = usernameInput.value.trim();
+        if (!name) return alert('أدخل اسمك أولاً');
+        currentUser = name;
+        currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        playerId = 'P_' + Math.random().toString(36).substring(2, 6);
+        isHost = true;
+
+        roomRef = db.ref('rooms/' + currentRoomId);
+        roomRef.set({
+          stage: 'LOBBY',
+          mafiaCount: 1,
+          createdAt: Date.now()
+        }).then(() => {
+          joinGameRoom();
+        });
+      });
+
+      joinBtn.addEventListener('click', () => {
+        const name = usernameInput.value.trim();
+        const room = roomIdInput.value.trim().toUpperCase();
+        if (!name || !room) return alert('أدخل اسمك ورمز الغرفة أولاً');
+        currentUser = name;
+        currentRoomId = room;
+        playerId = 'P_' + Math.random().toString(36).substring(2, 6);
+        isHost = false;
+
+        roomRef = db.ref('rooms/' + currentRoomId);
+        roomRef.once('value', (snapshot) => {
+          if (snapshot.exists()) {
+            document.getElementById('host-controls').classList.add('hidden');
+            joinGameRoom();
+          } else {
+            alert('الغرفة غير موجودة!');
+          }
+        });
+      });
+
+      function joinGameRoom() {
+        authScreen.classList.remove('active');
+        gameScreen.classList.add('active');
+        displayRoomId.innerText = currentRoomId;
+
+        const playerRef = roomRef.child('players/' + playerId);
+        playerRef.set({
+          name: currentUser,
+          isAlive: true,
+          role: ''
+        });
+
+        playerRef.onDisconnect().remove();
+
+        listenToRoomUpdates();
+        listenToChat();
+      }
+
+      function listenToRoomUpdates() {
+        roomRef.on('value', (snapshot) => {
+          const data = snapshot.val();
+          if (!data) return;
+
+          displayStage.innerText = translateStage(data.stage);
+
+          if (data.players) {
+            const playersList = Object.values(data.players);
+            renderTable(playersList);
+
+            const me = data.players[playerId];
+            if (me && me.role) myRole = me.role;
+          }
+        });
+      }
+
+      function listenToChat() {
+        roomRef.child('chat').on('child_added', (snapshot) => {
+          const msg = snapshot.val();
+          if (msg.type === 'system') {
+            appendSystemMessage(msg.text);
+          } else {
+            appendUserMessage(msg.sender, msg.text);
+          }
+        });
+      }
+
+      startGameBtn.addEventListener('click', () => {
+        if (!isHost) return;
+
+        roomRef.child('players').once('value', (snapshot) => {
+          const playersObj = snapshot.val();
+          const pIds = Object.keys(playersObj);
+          const mafiaCount = parseInt(mafiaCountInput.value);
+
+          if (mafiaCount >= pIds.length) {
+            alert('يجب أن يكون عدد المافيا أقل من عدد اللاعبين!');
+            return;
+          }
+
+          let roles = Array(mafiaCount).fill('MAFIA');
+          roles.push('DOCTOR');
+          roles.push('DETECTIVE');
+          while(roles.length < pIds.length) roles.push('CITIZEN');
+
+          roles.sort(() => Math.random() - 0.5);
+
+          pIds.forEach((id, idx) => {
+            roomRef.child('players/' + id).update({ role: roles[idx] });
+          });
+
+          roomRef.update({ stage: 'ROLE_REVEAL' });
+
+          roomRef.child('chat').push({
+            type: 'system',
+            text: 'بدأت المباراة الحقيقية! جاري كشف الأدوار...'
+          });
+
+          setTimeout(() => {
+            showRoleCard(myRole);
+          }, 500);
+        });
+      });
+
+      closeRoleBtn.addEventListener('click', () => {
+        roleCardModal.classList.add('hidden');
+      });
+
+      function showRoleCard(role) {
+        const roleImages = {
+          MAFIA: 'assets/images/roles/mafia.png',
+          DOCTOR: 'assets/images/roles/doctor.png',
+          DETECTIVE: 'assets/images/roles/detective.png',
+          CITIZEN: 'assets/images/roles/citizen.png'
+        };
+
+        roleCardImg.src = roleImages[role] || 'assets/images/roles/citizen.png';
+        roleCardImg.onerror = () => {
+          roleCardImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='210'><rect width='160' height='210' fill='%237c3aed'/><text x='50%' y='50%' fill='%23fff' font-size='18' dominant-baseline='middle' text-anchor='middle'>بطاقة الدور</text></svg>";
+        };
+        roleCardName.innerText = translateRole(role);
+        roleCardModal.classList.remove('hidden');
+      }
+
+      function renderTable(playersList) {
+        playersRing.innerHTML = '';
+        const total = playersList.length;
+        const radiusX = 38;
+        const radiusY = 32;
+
+        playersList.forEach((p, idx) => {
+          const angle = (idx / total) * (2 * Math.PI) - (Math.PI / 2);
+          const left = 50 + radiusX * Math.cos(angle);
+          const top = 50 + radiusY * Math.sin(angle);
+
+          const seat = document.createElement('div');
+          seat.className = `player-seat ${p.isAlive ? '' : 'dead'}`;
+          seat.style.left = `${left}%`;
+          seat.style.top = `${top}%`;
+
+          const img = document.createElement('img');
+          img.className = 'player-avatar';
+          img.src = 'assets/images/players/default.png';
+          img.onerror = () => {
+            img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='45' height='45'><circle cx='22.5' cy='22.5' r='20' fill='%234b5563' stroke='%237c3aed' stroke-width='2'/><text x='50%' y='55%' fill='%23fff' font-size='10' dominant-baseline='middle' text-anchor='middle'>لاعب</text></svg>";
+          };
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'player-name';
+          nameDiv.innerText = p.name;
+
+          seat.appendChild(img);
+          seat.appendChild(nameDiv);
+          playersRing.appendChild(seat);
+        });
+      }
+
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (text && roomRef) {
+          roomRef.child('chat').push({
+            type: 'user',
+            sender: currentUser,
+            text: text
+          });
+          chatInput.value = '';
+        }
+      });
+
+      function appendUserMessage(sender, text) {
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg';
+        msg.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
+        chatMessages.appendChild(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function appendSystemMessage(text) {
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg system';
+        msg.innerHTML = `<strong>النظام:</strong> ${escapeHtml(text)}`;
+        chatMessages.appendChild(msg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function translateRole(role) {
+        const map = { MAFIA: 'مافيا 🔴', DOCTOR: 'طبيب 🟢', DETECTIVE: 'محقق 🔍', CITIZEN: 'مواطن ⚪' };
+        return map[role] || role;
+      }
+
+      function translateStage(stage) {
+        const map = { LOBBY: 'الانتظار', ROLE_REVEAL: 'كشف الأدوار', NIGHT: 'الليل 🌙', INVESTIGATION: 'التحقيق 🔍', DISCUSSION: 'النقاش 💬', VOTING: 'التصويت 🗳️', GAME_OVER: 'انتهاء الجولة' };
+        return map[stage] || stage;
+      }
+
+      function escapeHtml(text) {
+        return text.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+      }
+    });
+  </script>
+</body>
+</html>
