@@ -15,7 +15,8 @@
       --btn-gray: #4b5563;
       --btn-gray-hover: #374151;
       --accent-gold: #fbbf24;
-      --custom-bg-image: url('assets/images/ui/bg.jpg'); 
+      /* تم تحديث مسار الخلفية ليطابق مجلد public */
+      --custom-bg-image: url('public/assets/images/ui/bg.jpg'); 
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', system-ui, sans-serif; }
@@ -109,27 +110,28 @@
       width: 100%;
     }
 
-    /* الطاولة المصغرة */
+    /* الطاولة المصغرة المنظمة */
     #mini-table-section {
       position: relative;
       width: 100%;
-      height: 170px;
+      height: 190px;
       background: rgba(15, 15, 20, 0.4);
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
     #mafia-table {
       position: absolute;
-      width: 60%;
-      height: 60%;
-      background: rgba(28, 18, 12, 0.7);
-      border: 5px solid rgba(74, 40, 24, 0.9);
+      width: 55%;
+      height: 55%;
+      background: rgba(28, 18, 12, 0.8);
+      border: 4px solid rgba(74, 40, 24, 0.9);
       border-radius: 100px;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
     }
 
     #players-ring {
@@ -141,21 +143,21 @@
 
     .player-seat {
       position: absolute;
-      width: 65px;
+      width: 70px;
       text-align: center;
       transform: translate(-50%, -50%);
     }
 
     .player-avatar {
-      width: 45px; height: 45px;
+      width: 42px; height: 42px;
       border-radius: 50%;
       border: 2px solid var(--accent-gold);
       background: #222;
       object-fit: cover;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.8);
     }
     .player-seat.dead .player-avatar { filter: grayscale(100%) opacity(0.3); }
-    .player-name { font-size: 0.85rem; font-weight: 700; margin-top: 0.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+    .player-name { font-size: 0.8rem; font-weight: 700; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
 
     /* الشات الرئيسي */
     #chat-section {
@@ -166,7 +168,7 @@
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       overflow: hidden;
-      min-height: 300px;
+      min-height: 280px;
     }
 
     .chat-header { padding: 0.7rem 1rem; background: rgba(0, 0, 0, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
@@ -174,7 +176,7 @@
 
     .messages-container {
       flex: 1; padding: 1rem; overflow-y: auto; display: flex;
-      flex-direction: column; gap: 0.8rem; max-height: 45vh;
+      flex-direction: column; gap: 0.8rem; max-height: 40vh;
     }
 
     .chat-msg {
@@ -291,12 +293,10 @@
     </div>
   </div>
 
-  <!-- مكتبات Firebase JS SDK (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // تم وضع المفاتيح الخاصة بمشروعك (mafia-game-cf1fc)
     const firebaseConfig = {
       apiKey: "AIzaSyA0LSflXoZU4QuJCBSOaP9LuinK5HJJL_M",
       authDomain: "mafia-game-cf1fc.firebaseapp.com",
@@ -308,7 +308,6 @@
       measurementId: "G-0ND7JNTLQM"
     };
 
-    // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -472,13 +471,13 @@
 
       function showRoleCard(role) {
         const roleImages = {
-          MAFIA: 'assets/images/roles/mafia.png',
-          DOCTOR: 'assets/images/roles/doctor.png',
-          DETECTIVE: 'assets/images/roles/detective.png',
-          CITIZEN: 'assets/images/roles/citizen.png'
+          MAFIA: 'public/assets/images/roles/mafia.png',
+          DOCTOR: 'public/assets/images/roles/doctor.png',
+          DETECTIVE: 'public/assets/images/roles/detective.png',
+          CITIZEN: 'public/assets/images/roles/citizen.png'
         };
 
-        roleCardImg.src = roleImages[role] || 'assets/images/roles/citizen.png';
+        roleCardImg.src = roleImages[role] || 'public/assets/images/roles/citizen.png';
         roleCardImg.onerror = () => {
           roleCardImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='210'><rect width='160' height='210' fill='%237c3aed'/><text x='50%' y='50%' fill='%23fff' font-size='18' dominant-baseline='middle' text-anchor='middle'>بطاقة الدور</text></svg>";
         };
@@ -489,7 +488,7 @@
       function renderTable(playersList) {
         playersRing.innerHTML = '';
         const total = playersList.length;
-        const radiusX = 38;
+        const radiusX = 35;
         const radiusY = 32;
 
         playersList.forEach((p, idx) => {
@@ -504,9 +503,9 @@
 
           const img = document.createElement('img');
           img.className = 'player-avatar';
-          img.src = 'assets/images/players/default.png';
+          img.src = 'public/assets/images/players/default.png';
           img.onerror = () => {
-            img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='45' height='45'><circle cx='22.5' cy='22.5' r='20' fill='%234b5563' stroke='%237c3aed' stroke-width='2'/><text x='50%' y='55%' fill='%23fff' font-size='10' dominant-baseline='middle' text-anchor='middle'>لاعب</text></svg>";
+            img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='42'><circle cx='21' cy='21' r='19' fill='%234b5563' stroke='%237c3aed' stroke-width='2'/><text x='50%' y='55%' fill='%23fff' font-size='9' dominant-baseline='middle' text-anchor='middle'>لاعب</text></svg>";
           };
 
           const nameDiv = document.createElement('div');
@@ -542,7 +541,7 @@
 
       function appendSystemMessage(text) {
         const msg = document.createElement('div');
-        msg.className = 'chat-msg system';
+        msg.className, 'chat-msg system';
         msg.innerHTML = `<strong>النظام:</strong> ${escapeHtml(text)}`;
         chatMessages.appendChild(msg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
