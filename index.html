@@ -17,8 +17,8 @@
       --btn-gray-hover: #374151;
       --accent-gold: #fbbf24;
       --danger-red: #dc2626;
-      --btn-bg: rgba(255, 255, 255, 0.85);
-      --btn-text: #333333;
+      --btn-bg: rgba(255, 255, 255, 0.9);
+      --btn-text: #222222;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -39,7 +39,7 @@
     .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; }
     .screen.active { display: flex; }
 
-    /* واجهة القادمين قريباً (Landing Screen) */
+    /* واجهة الصفحة الرئيسية (Landing Screen) */
     .game-container {
       width: 100%;
       height: 100%;
@@ -73,7 +73,7 @@
       top: 12px; left: 12px;
       z-index: 10;
       color: rgba(255, 255, 255, 0.4);
-      font-size: 12px;
+      font-size: 14px;
       cursor: pointer;
       padding: 8px;
       letter-spacing: 2px;
@@ -127,12 +127,12 @@
       justify-content: flex-end;
       align-items: center;
       gap: 12px;
-      cursor: not-allowed;
-      opacity: 0.65;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      pointer-events: none;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: 0.2s;
     }
-    .menu-btn i { font-size: 18px; color: #777777; width: 22px; text-align: center; }
+    .menu-btn:active { transform: scale(0.98); }
+    .menu-btn i { font-size: 18px; color: #555555; width: 22px; text-align: center; }
 
     .footer-bar {
       position: absolute;
@@ -175,7 +175,7 @@
     .btn-submit { background: #27ae60; color: #fff; }
     .btn-cancel { background: #c0392b; color: #fff; }
 
-    /* شاشة تسجيل اسم اللاعب وإنشاء الغرفة (تظهر بعد إدخال الكود) */
+    /* شاشة الدخول والتسجيل للغرف */
     #lobby-auth-screen {
       background-image: url('public/assets/images/ui/bg.jpg');
       background-size: cover;
@@ -187,7 +187,7 @@
 
     .center-card {
       width: 90%; max-width: 400px;
-      background: rgba(15, 15, 20, 0.8);
+      background: rgba(15, 15, 20, 0.85);
       padding: 2rem; border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
@@ -224,7 +224,7 @@
     }
 
     #status-bar {
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       padding: 0.8rem 1.2rem; display: flex; flex-wrap: wrap;
       gap: 1rem; justify-content: space-between; align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.15); z-index: 20;
@@ -335,7 +335,7 @@
 </head>
 <body>
 
-    <!-- الشاشة الأولى: Coming Soon والوصول السري للمطور -->
+    <!-- الشاشة الأولى: الصفحة الرئيسية للعبة -->
     <div id="landing-screen" class="game-container screen active">
         <div class="dev-secret-dots" onclick="openDevModal()">•••</div>
 
@@ -355,10 +355,10 @@
         </div>
 
         <div class="menu-container">
-            <button class="menu-btn"><span>إنشاء غرفة</span><i class="fa-solid fa-plus"></i></button>
-            <button class="menu-btn"><span>دخول إلى غرفة</span><i class="fa-solid fa-door-open"></i></button>
-            <button class="menu-btn"><span>طريقة اللعب</span><i class="fa-solid fa-book-open"></i></button>
-            <button class="menu-btn"><span>الإعدادات</span><i class="fa-solid fa-sliders"></i></button>
+            <button class="menu-btn" onclick="openDevModal()"><span>إنشاء غرفة</span><i class="fa-solid fa-plus"></i></button>
+            <button class="menu-btn" onclick="openDevModal()"><span>دخول إلى غرفة</span><i class="fa-solid fa-door-open"></i></button>
+            <button class="menu-btn" onclick="alert('لعبة المافيا: يتواجه أفراد المافيا ضد المواطنين في جولات ليلية ونهارية حتى يكشف المواطنون المافيا أو تسيطر المافيا على المدينة!')"><span>طريقة اللعب</span><i class="fa-solid fa-book-open"></i></button>
+            <button class="menu-btn" onclick="alert('الإعدادات قيد التطوير')"><span>الإعدادات</span><i class="fa-solid fa-sliders"></i></button>
         </div>
 
         <div class="footer-bar">
@@ -382,7 +382,7 @@
         </div>
     </div>
 
-    <!-- الشاشة الثانية: تسجيل اسم اللاعب وإنشاء / الانضمام للغرفة -->
+    <!-- الشاشة الثانية: اختيار الاسم والرمز -->
     <div id="lobby-auth-screen" class="screen">
         <div class="center-card">
             <h1>MAFIA ONLINE</h1>
@@ -390,11 +390,11 @@
                 <label>اسم اللاعب:</label>
                 <input type="text" id="username-input" placeholder="أدخل اسمك..." maxlength="15">
             </div>
-            <button id="create-btn" class="btn primary btn-purple">إنشاء غرفة جديدة</button>
+            <button id="create-btn" type="button" class="btn primary btn-purple">إنشاء غرفة جديدة</button>
             <hr>
             <div class="form-group inline">
                 <input type="text" id="room-id-input" placeholder="رمز الغرفة">
-                <button id="join-btn" class="btn btn-gray">انضمام</button>
+                <button id="join-btn" type="button" class="btn btn-gray">انضمام</button>
             </div>
         </div>
     </div>
@@ -411,7 +411,7 @@
             <div id="host-controls">
                 <label>مافيا:</label>
                 <input type="number" id="mafia-count-input" min="1" value="1">
-                <button id="start-game-btn" class="btn btn-purple">بدء المباراة</button>
+                <button id="start-game-btn" type="button" class="btn btn-purple">بدء المباراة</button>
             </div>
         </header>
 
@@ -447,7 +447,7 @@
             <h3 style="color:var(--accent-gold);">دورك السري</h3>
             <img id="role-card-img" class="role-card-img" src="" alt="بطاقة الدور">
             <h4 id="role-card-name" style="color:white; margin-bottom:0.8rem;"></h4>
-            <button id="close-role-btn" class="btn btn-purple">فهمت دوري</button>
+            <button id="close-role-btn" type="button" class="btn btn-purple">فهمت دوري</button>
         </div>
     </div>
 
@@ -455,7 +455,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // الدوال الخاصة بفتح نافذة المطورين عبر النقاط الثلاث
     function openDevModal() {
         document.getElementById('devModal').style.display = 'flex';
         document.getElementById('devCodeInput').focus();
@@ -478,7 +477,6 @@
         }
     }
 
-    // إعدادات Firebase والمنطق الكامل للعبة
     const firebaseConfig = {
       apiKey: "AIzaSyA0LSflXoZU4QuJCBSOaP9LuinK5HJJL_M",
       authDomain: "mafia-game-cf1fc.firebaseapp.com",
@@ -530,7 +528,8 @@
       let isAlive = true;
       let hostTimer = null;
 
-      createBtn.addEventListener('click', () => {
+      createBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         const name = usernameInput.value.trim();
         if (!name) return alert('أدخل اسمك أولاً');
         currentUser = name;
@@ -549,7 +548,8 @@
         });
       });
 
-      joinBtn.addEventListener('click', () => {
+      joinBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         const name = usernameInput.value.trim();
         const room = roomIdInput.value.trim().toUpperCase();
         if (!name || !room) return alert('أدخل اسمك ورمز الغرفة أولاً');
@@ -571,6 +571,7 @@
 
       function joinGameRoom() {
         lobbyAuthScreen.classList.remove('active');
+        gameMainScreen.style.display = 'flex';
         gameMainScreen.classList.add('active');
         displayRoomId.innerText = currentRoomId;
 
@@ -624,7 +625,8 @@
         });
       }
 
-      startGameBtn.addEventListener('click', () => {
+      startGameBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         if (!isHost) return;
 
         roomRef.child('players').once('value', (snapshot) => {
@@ -681,7 +683,7 @@
 
       function processStageTransition(data) {
         let nextStage = 'DISCUSSION';
-        let nextTime = 120; // 120 ثانية للنقاش
+        let nextTime = 120;
         let msg = 'بدأت مرحلة النقاش الحرة 💬';
 
         if (data.stage === 'ROLE_REVEAL') {
@@ -816,6 +818,7 @@
         for (let id in playersObj) {
           if (playersObj[id].isAlive) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-gray';
             btn.innerText = playersObj[id].name;
             btn.onclick = () => {
@@ -836,7 +839,8 @@
         }
       }
 
-      closeRoleBtn.addEventListener('click', () => {
+      closeRoleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         roleCardModal.classList.add('hidden');
       });
 
