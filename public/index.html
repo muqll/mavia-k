@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mafia Online - لعبة المافيا</title>
+  <title>Mafia Online - النظام التفاعلي الكامل</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap">
   
   <style>
@@ -15,7 +15,8 @@
       --btn-gray: #4b5563;
       --btn-gray-hover: #374151;
       --accent-gold: #fbbf24;
-      --custom-bg-image: url('assets/images/ui/bg.jpg'); 
+      --danger-red: #dc2626;
+      --custom-bg-image: url('public/assets/images/ui/bg.jpg'); 
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', system-ui, sans-serif; }
@@ -35,12 +36,11 @@
     .screen { display: none; width: 100%; min-height: 100vh; }
     .screen.active { display: flex; flex-direction: column; }
 
-    /* شاشة الدخول */
     .center-card {
       margin: auto;
       width: 90%;
       max-width: 400px;
-      background: rgba(15, 15, 20, 0.6);
+      background: rgba(15, 15, 20, 0.7);
       padding: 2rem;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -76,19 +76,22 @@
     .btn-purple:hover { background: var(--btn-purple-hover); }
     .btn-gray { background: var(--btn-gray); }
     .btn-gray:hover { background: var(--btn-gray-hover); }
+    .btn-danger { background: var(--danger-red); }
     .btn.primary { width: 100%; background: var(--btn-purple); }
 
-    /* شريط العنوان المرن */
     #status-bar {
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(0, 0, 0, 0.75);
       padding: 0.8rem 1.2rem; display: flex; flex-wrap: wrap;
       gap: 1rem; justify-content: space-between; align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.15);
       z-index: 20;
     }
 
-    .status-info { display: flex; gap: 1.2rem; align-items: center; font-size: 1.1rem; font-weight: 700; }
+    .status-info { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; font-size: 1.1rem; font-weight: 700; }
     .status-info strong { color: var(--accent-gold); font-size: 1.2rem; }
+    #participants-strip { display:flex; flex-wrap:wrap; justify-content:center; gap:.45rem; padding:.65rem .8rem; background:rgba(0,0,0,.68); border-bottom:1px solid rgba(255,255,255,.12); }
+    .participant-chip { padding:.22rem .65rem; border-radius:999px; background:rgba(255,255,255,.09); border:1px solid currentColor; font-size:.86rem; font-weight:800; white-space:nowrap; }
+    .participant-chip.dead { opacity:.45; text-decoration:line-through; }
 
     #host-controls { display: flex; align-items: center; gap: 0.6rem; font-size: 1.1rem; font-weight: 700; }
     #host-controls input {
@@ -97,7 +100,6 @@
       color: white; text-align: center; font-size: 1.1rem; font-weight: 700;
     }
 
-    /* تخطيط اللعبة */
     #game-layout {
       flex: 1;
       display: flex;
@@ -109,27 +111,27 @@
       width: 100%;
     }
 
-    /* الطاولة المصغرة */
     #mini-table-section {
       position: relative;
       width: 100%;
-      height: 170px;
-      background: rgba(15, 15, 20, 0.4);
+      height: 260px;
+      background: rgba(15, 15, 20, 0.5);
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
     #mafia-table {
       position: absolute;
-      width: 60%;
-      height: 60%;
-      background: rgba(28, 18, 12, 0.7);
-      border: 5px solid rgba(74, 40, 24, 0.9);
+      width: 55%;
+      height: 55%;
+      background: rgba(28, 18, 12, 0.85);
+      border: 4px solid rgba(74, 40, 24, 0.9);
       border-radius: 100px;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
     }
 
     #players-ring {
@@ -141,40 +143,57 @@
 
     .player-seat {
       position: absolute;
-      width: 65px;
+      width: 82px;
       text-align: center;
+      z-index: 2;
       transform: translate(-50%, -50%);
+      cursor: pointer;
     }
 
     .player-avatar {
-      width: 45px; height: 45px;
+      width: 42px; height: 42px;
       border-radius: 50%;
       border: 2px solid var(--accent-gold);
       background: #222;
       object-fit: cover;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.8);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.8);
     }
     .player-seat.dead .player-avatar { filter: grayscale(100%) opacity(0.3); }
-    .player-name { font-size: 0.85rem; font-weight: 700; margin-top: 0.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+    .player-name { font-size: 0.82rem; font-weight: 900; margin-top: 2px; text-shadow: 0 2px 4px rgba(0,0,0,1); overflow-wrap:anywhere; line-height:1.15; }
+    .vote-badge { display:none; position:absolute; top:-8px; right:0; min-width:24px; height:24px; padding:0 5px; border-radius:999px; background:#fbbf24; color:#211400; border:2px solid #fff; font-size:.8rem; font-weight:900; align-items:center; justify-content:center; box-shadow:0 2px 8px #000; }
+    .vote-badge.visible { display:flex; }
+    .player-seat.my-vote .player-avatar { outline:3px solid #34d399; outline-offset:2px; }
+    .player-seat.my-vote .player-name::after { content:' ✓'; color:#34d399; }
+    .vote-summary { color:#fbbf24; font-size:.9rem; font-weight:800; margin-top:.45rem; }
+    .btn.selected-action { outline:3px solid #34d399; outline-offset:2px; }
+    @media (max-width:520px) {
+      #mini-table-section { height:240px; }
+      .player-seat { width:64px; }
+      .player-avatar { width:36px; height:36px; }
+      .player-name { font-size:.7rem; }
+      #status-bar { padding:.65rem; gap:.6rem; }
+      .status-info { gap:.55rem; font-size:.9rem; }
+      #host-controls { flex-wrap:wrap; font-size:.9rem; }
+    }
 
-    /* الشات الرئيسي */
     #chat-section {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: rgba(10, 10, 15, 0.75);
+      background: rgba(10, 10, 15, 0.8);
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       overflow: hidden;
-      min-height: 300px;
+      min-height: 280px;
     }
 
-    .chat-header { padding: 0.7rem 1rem; background: rgba(0, 0, 0, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .chat-header { padding: 0.7rem 1rem; background: rgba(0, 0, 0, 0.6); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center;}
     .chat-header h3 { color: #c4b5fd; font-size: 1.1rem; font-weight: 900; }
+    #my-role-badge { background: var(--btn-purple); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.9rem; }
 
     .messages-container {
       flex: 1; padding: 1rem; overflow-y: auto; display: flex;
-      flex-direction: column; gap: 0.8rem; max-height: 45vh;
+      flex-direction: column; gap: 0.8rem; max-height: 38vh;
     }
 
     .chat-msg {
@@ -191,11 +210,11 @@
       background: rgba(124, 58, 237, 0.35);
       border-right: 5px solid var(--btn-purple);
       width: 100%;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       color: #fef08a;
     }
 
-    #chat-form { display: flex; padding: 0.6rem; background: rgba(0, 0, 0, 0.5); gap: 0.5rem; }
+    #chat-form { display: flex; padding: 0.6rem; background: rgba(0, 0, 0, 0.6); gap: 0.5rem; }
     #chat-input {
       flex: 1; padding: 0.7rem 1rem; border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6);
@@ -204,12 +223,12 @@
 
     #action-panel {
       padding: 0.8rem;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       text-align: center;
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(255,255,255,0.15);
     }
+    #action-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.5rem; }
 
-    /* نافذة كشف الدور */
     #role-card-modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85); display: flex; align-items: center;
@@ -226,6 +245,7 @@
 </head>
 <body>
   <div id="app">
+    <!-- شاشة تسجيل الدخول -->
     <div id="auth-screen" class="screen active">
       <div class="card center-card">
         <h1>MAFIA ONLINE</h1>
@@ -242,12 +262,13 @@
       </div>
     </div>
 
+    <!-- شاشة اللعبة الرئيسية -->
     <div id="game-screen" class="screen">
       <header id="status-bar">
         <div class="status-info">
           <span>الغرفة: <strong id="display-room-id">------</strong></span>
           <span>المرحلة: <strong id="display-stage">الانتظار</strong></span>
-          <span>الوقت: <strong id="display-timer">--</strong>ث</span>
+          <span>الوقت: <strong id="display-timer">20</strong>ث</span>
         </div>
         
         <div id="host-controls">
@@ -256,6 +277,7 @@
           <button id="start-game-btn" class="btn btn-purple">بدء المباراة</button>
         </div>
       </header>
+      <div id="participants-strip" aria-label="المشاركون في الغرفة"></div>
 
       <main id="game-layout">
         <section id="mini-table-section">
@@ -266,21 +288,25 @@
         <section id="chat-section">
           <div class="chat-header">
             <h3>محادثة اللعبة الرئيسية</h3>
+            <span id="my-role-badge">الدور: غير متوفر</span>
           </div>
           <div id="chat-messages" class="messages-container"></div>
+          
+          <!-- لوحة التفاعل والقرارات (ليل / تصويت) -->
+          <div id="action-panel" class="hidden">
+            <p id="action-title" style="color:var(--accent-gold); font-size: 1.1rem; font-weight:700;"></p>
+            <div id="action-buttons"></div>
+          </div>
+
           <form id="chat-form">
             <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." autocomplete="off">
             <button type="submit" class="btn btn-purple">إرسال</button>
           </form>
-
-          <div id="action-panel" class="hidden">
-            <p id="action-title" style="margin-bottom:0.5rem; color:var(--accent-gold); font-size: 1.1rem; font-weight:700;"></p>
-            <div id="action-buttons"></div>
-          </div>
         </section>
       </main>
     </div>
 
+    <!-- نافذة بطاقة الدور -->
     <div id="role-card-modal" class="hidden">
       <div class="role-card-box">
         <h3 style="color:var(--accent-gold);">دورك السري</h3>
@@ -291,12 +317,10 @@
     </div>
   </div>
 
-  <!-- مكتبات Firebase JS SDK (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // تم وضع المفاتيح الخاصة بمشروعك (mafia-game-cf1fc)
     const firebaseConfig = {
       apiKey: "AIzaSyA0LSflXoZU4QuJCBSOaP9LuinK5HJJL_M",
       authDomain: "mafia-game-cf1fc.firebaseapp.com",
@@ -308,7 +332,6 @@
       measurementId: "G-0ND7JNTLQM"
     };
 
-    // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -329,9 +352,11 @@
       const chatForm = document.getElementById('chat-form');
       const chatInput = document.getElementById('chat-input');
       const playersRing = document.getElementById('players-ring');
+      
       const actionPanel = document.getElementById('action-panel');
       const actionTitle = document.getElementById('action-title');
       const actionButtons = document.getElementById('action-buttons');
+      const myRoleBadge = document.getElementById('my-role-badge');
 
       const roleCardModal = document.getElementById('role-card-modal');
       const roleCardImg = document.getElementById('role-card-img');
@@ -344,6 +369,23 @@
       let isHost = false;
       let roomRef = null;
       let myRole = "";
+      let isAlive = true;
+      let hostTimer = null;
+      let chatListenerAttached = false;
+      let chatListenerRef = null;
+      const seenChatIds = new Set();
+      let roleShownThisReveal = false;
+      let currentVotes = {};
+      let currentPlayers = {};
+      let myVoteTarget = null;
+      const playerColors = ['#f87171','#60a5fa','#4ade80','#facc15','#c084fc','#fb923c','#2dd4bf','#f472b6','#a3e635','#818cf8','#fb7185','#38bdf8','#e879f9','#a78bfa','#f59e0b','#34d399'];
+
+      function colorForPlayer(id, name='') {
+        const key = String(id || name || 'player');
+        let hash = 0;
+        for (let i = 0; i < key.length; i++) hash = ((hash * 31) + key.charCodeAt(i)) >>> 0;
+        return playerColors[hash % playerColors.length];
+      }
 
       createBtn.addEventListener('click', () => {
         const name = usernameInput.value.trim();
@@ -356,6 +398,7 @@
         roomRef = db.ref('rooms/' + currentRoomId);
         roomRef.set({
           stage: 'LOBBY',
+          timer: 20,
           mafiaCount: 1,
           createdAt: Date.now()
         }).then(() => {
@@ -396,7 +439,6 @@
         });
 
         playerRef.onDisconnect().remove();
-
         listenToRoomUpdates();
         listenToChat();
       }
@@ -407,28 +449,55 @@
           if (!data) return;
 
           displayStage.innerText = translateStage(data.stage);
+          if (data.timer !== undefined) displayTimer.innerText = data.timer;
+          if (data.stage !== 'ROLE_REVEAL') roleShownThisReveal = false;
+
+          currentPlayers = data.players || {};
+          currentVotes = data.votes || {};
+          myVoteTarget = currentVotes[playerId] || null;
+          renderParticipants(currentPlayers);
+          renderTable(currentPlayers, currentVotes);
 
           if (data.players) {
-            const playersList = Object.values(data.players);
-            renderTable(playersList);
+            if (data.players[playerId]) {
+              const meData = data.players[playerId];
+              myRole = meData.role;
+              isAlive = meData.isAlive;
+              myRoleBadge.innerText = `الدور: ${translateRole(myRole)}`;
 
-            const me = data.players[playerId];
-            if (me && me.role) myRole = me.role;
+              if (data.stage === 'ROLE_REVEAL' && myRole && !roleShownThisReveal) {
+                showRoleCard(myRole);
+                roleShownThisReveal = true;
+              }
+            }
+
+            // تفعيل لوحة التفاعل حسب المرحلة الحالية
+            handleStageActions(data);
           }
         });
       }
 
       function listenToChat() {
-        roomRef.child('chat').on('child_added', (snapshot) => {
-          const msg = snapshot.val();
+        if (chatListenerAttached && chatListenerRef) {
+          chatListenerRef.off('child_added');
+        }
+        chatMessages.innerHTML = '';
+        seenChatIds.clear();
+        chatListenerRef = roomRef.child('chat');
+        chatListenerAttached = true;
+        chatListenerRef.on('child_added', (snapshot) => {
+          if (seenChatIds.has(snapshot.key)) return;
+          seenChatIds.add(snapshot.key);
+          const msg = snapshot.val() || {};
           if (msg.type === 'system') {
-            appendSystemMessage(msg.text);
+            appendSystemMessage(msg.text || '');
           } else {
-            appendUserMessage(msg.sender, msg.text);
+            appendUserMessage(msg.sender || 'لاعب', msg.text || '', msg.senderId || msg.sender || '');
           }
         });
       }
 
+      // ضغط بدء اللعبة من المضيف
       startGameBtn.addEventListener('click', () => {
         if (!isHost) return;
 
@@ -438,7 +507,7 @@
           const mafiaCount = parseInt(mafiaCountInput.value);
 
           if (mafiaCount >= pIds.length) {
-            alert('يجب أن يكون عدد المافيا أقل من عدد اللاعبين!');
+            alert('عدد المافيا يجب أن يكون أقل من عدد اللاعبين!');
             return;
           }
 
@@ -449,22 +518,228 @@
 
           roles.sort(() => Math.random() - 0.5);
 
+          const updates = {};
           pIds.forEach((id, idx) => {
-            roomRef.child('players/' + id).update({ role: roles[idx] });
+            updates[`players/${id}/role`] = roles[idx];
+            updates[`players/${id}/isAlive`] = true;
           });
+          updates['stage'] = 'ROLE_REVEAL';
+          updates['timer'] = 15;
+          updates['nightActions'] = {};
+          updates['votes'] = {};
 
-          roomRef.update({ stage: 'ROLE_REVEAL' });
+          roomRef.update(updates);
+          roomRef.child('chat').push({ type: 'system', text: 'بدأت المعركة! تم توزيع الأدوار سراً.' });
 
-          roomRef.child('chat').push({
-            type: 'system',
-            text: 'بدأت المباراة الحقيقية! جاري كشف الأدوار...'
-          });
-
-          setTimeout(() => {
-            showRoleCard(myRole);
-          }, 500);
+          startHostGameLoop();
         });
       });
+
+      // نظام إدارة المراحل التلقائي (Game Loop)
+      function startHostGameLoop() {
+        if (hostTimer) clearInterval(hostTimer);
+
+        hostTimer = setInterval(() => {
+          roomRef.once('value', (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            let currentTimer = data.timer || 15;
+            if (currentTimer > 1) {
+              roomRef.update({ timer: currentTimer - 1 });
+            } else {
+              processStageTransition(data);
+            }
+          });
+        }, 1000);
+      }
+
+      function processStageTransition(data) {
+        let nextStage = 'DISCUSSION';
+        let nextTime = 40;
+        let msg = 'بدأت مرحلة النقاش الحرة 💬';
+
+        if (data.stage === 'ROLE_REVEAL') {
+          nextStage = 'NIGHT';
+          nextTime = 25;
+          msg = 'حل الليل والظلام... حان وقت تحركات المافيا والأطباء 🌙';
+        } else if (data.stage === 'NIGHT') {
+          // معالجة أحداث الليل
+          resolveNightActions(data);
+          nextStage = 'DISCUSSION';
+          nextTime = 40;
+          msg = 'طلع الصباح! استعدوا للنقاش حول ما حدث ليلاً ☀️';
+        } else if (data.stage === 'DISCUSSION') {
+          nextStage = 'VOTING';
+          nextTime = 25;
+          msg = 'بدأت مرحلة التصويت لاختيار المشتبه به وإقصائه 🗳️';
+        } else if (data.stage === 'VOTING') {
+          // معالجة نتائج التصويت
+          resolveVotingResults(data);
+          nextStage = 'NIGHT';
+          nextTime = 25;
+          msg = 'حل الليل مرة أخرى... 🌙';
+        }
+
+        // فحص الفوز قبل الانتقال
+        if (checkWinConditions(data.players)) return;
+
+        roomRef.update({ stage: nextStage, timer: nextTime, nightActions: {}, votes: {} });
+        roomRef.child('chat').push({ type: 'system', text: msg });
+      }
+
+      // معالجة الليل (القتل والحماية والفحص)
+      function resolveNightActions(data) {
+        const actions = data.nightActions || {};
+        let mafiaTarget = null;
+        let doctorTarget = null;
+
+        for (let pId in actions) {
+          if (actions[pId].type === 'KILL') mafiaTarget = actions[pId].target;
+          if (actions[pId].type === 'SAVE') doctorTarget = actions[pId].target;
+        }
+
+        if (mafiaTarget) {
+          if (mafiaTarget === doctorTarget) {
+            roomRef.child('chat').push({ type: 'system', text: 'أنقذ الطبيب الضحية المستهدفة ليلاً ولم يحدث أي مكروه! 🟢' });
+          } else {
+            roomRef.child(`players/${mafiaTarget}`).update({ isAlive: false });
+            const victimName = data.players[mafiaTarget] ? data.players[mafiaTarget].name : 'لاعب';
+            roomRef.child('chat').push({ type: 'system', text: `استيقظ الجميع على خبر مأساوي: تم العثور على اللاعب ${victimName} مقتولاً! ❌` });
+          }
+        }
+      }
+
+      // معالجة نتائج التصويت
+      function resolveVotingResults(data) {
+        const votes = data.votes || {};
+        const players = data.players || {};
+        const voteCounts = {};
+        let skipCount = 0;
+
+        for (const voterId in votes) {
+          if (!players[voterId] || !players[voterId].isAlive) continue;
+          const targetId = votes[voterId];
+          if (targetId === 'SKIP') {
+            skipCount++;
+          } else if (players[targetId] && players[targetId].isAlive) {
+            voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
+          }
+        }
+
+        const ranked = Object.entries(voteCounts).sort((a, b) => b[1] - a[1]);
+        const highest = ranked.length ? ranked[0][1] : 0;
+        const tied = ranked.filter(entry => entry[1] === highest);
+
+        if (!highest || skipCount >= highest) {
+          roomRef.child('chat').push({ type: 'system', text: `انتهى التصويت دون إقصاء أي لاعب. أصوات التخطي: ${skipCount}.` });
+        } else if (tied.length > 1) {
+          roomRef.child('chat').push({ type: 'system', text: 'تعادل التصويت بين أكثر من لاعب، لذلك لم يتم إقصاء أحد.' });
+        } else {
+          const lynchedId = tied[0][0];
+          roomRef.child(`players/${lynchedId}`).update({ isAlive: false });
+          roomRef.child('chat').push({ type: 'system', text: `نتيجة للتصويت الجماعي، تم إقصاء اللاعب ${players[lynchedId].name}! ⚖️` });
+        }
+      }
+
+      // فحص شروط الفوز
+      function checkWinConditions(playersObj) {
+        if (!playersObj) return false;
+        let aliveMafia = 0;
+        let aliveTown = 0;
+
+        for (let id in playersObj) {
+          if (playersObj[id].isAlive) {
+            if (playersObj[id].role === 'MAFIA') aliveMafia++;
+            else aliveTown++;
+          }
+        }
+
+        if (aliveMafia === 0) {
+          roomRef.update({ stage: 'GAME_OVER', timer: 0 });
+          roomRef.child('chat').push({ type: 'system', text: '🎉 انتهت اللعبة بفوز المواطنين بعد القضاء على جميع المافيا!' });
+          return true;
+        } else if (aliveMafia >= aliveTown) {
+          roomRef.update({ stage: 'GAME_OVER', timer: 0 });
+          roomRef.child('chat').push({ type: 'system', text: '🔴 انتهت اللعبة بفوز المافيا لتساوي وتفوق عددهم على المواطنين!' });
+          return true;
+        }
+        return false;
+      }
+
+      // عرض أزرار التفاعل واتخاذ القرار حسب الدور والمرحلة
+      function handleStageActions(data) {
+        if (!isAlive || data.stage === 'LOBBY' || data.stage === 'ROLE_REVEAL' || data.stage === 'GAME_OVER') {
+          actionPanel.classList.add('hidden');
+          return;
+        }
+
+        actionPanel.classList.remove('hidden');
+        actionButtons.innerHTML = '';
+
+        if (data.stage === 'NIGHT') {
+          if (myRole === 'MAFIA') {
+            actionTitle.innerText = '🌙 مرحلة الليل: اختر ضحية لاستبعادها';
+            renderActionButtons(data.players, 'KILL');
+          } else if (myRole === 'DOCTOR') {
+            actionTitle.innerText = '🟢 مرحلة الليل: اختر لاعباً لحمايته وتطبيبه';
+            renderActionButtons(data.players, 'SAVE');
+          } else if (myRole === 'DETECTIVE') {
+            actionTitle.innerText = '🔍 مرحلة الليل: اختر لاعباً لفحص هويته';
+            renderActionButtons(data.players, 'INVESTIGATE');
+          } else {
+            actionTitle.innerText = '🌙 مرحلة الليل: نام بهدوء، جاري تنفيذ عمليات المافيا...';
+          }
+        } else if (data.stage === 'DISCUSSION') {
+          actionTitle.innerText = '💬 مرحلة النقاش المفتوح (تحدث عبر الشات أدناه)';
+          actionPanel.classList.add('hidden');
+        } else if (data.stage === 'VOTING') {
+          actionTitle.innerText = '🗳️ مرحلة التصويت: اختر المشتبه به أو تخطَّ التصويت';
+          renderActionButtons(data.players, 'VOTE', data.votes || {});
+          const skipCount = Object.values(data.votes || {}).filter(v => v === 'SKIP').length;
+          const summary = document.createElement('div');
+          summary.className = 'vote-summary';
+          summary.id = 'vote-summary';
+          summary.textContent = `أصوات التخطي: ${skipCount}`;
+          actionButtons.appendChild(summary);
+        }
+      }
+
+      function renderActionButtons(playersObj, actionType, votes = {}) {
+        if (!playersObj) return;
+        for (const id in playersObj) {
+          if (!playersObj[id].isAlive) continue;
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-gray';
+          btn.innerText = playersObj[id].name;
+          if (actionType === 'VOTE' && votes[playerId] === id) btn.classList.add('selected-action');
+          btn.style.borderBottom = `3px solid ${colorForPlayer(id, playersObj[id].name)}`;
+          btn.onclick = () => {
+            if (actionType === 'VOTE') {
+              roomRef.child(`votes/${playerId}`).set(id);
+              return;
+            }
+            if (actionType === 'INVESTIGATE') {
+              const targetRole = playersObj[id].role;
+              const resultText = (targetRole === 'MAFIA') ? 'مافيا ❌' : 'ليس مافيا ✔️';
+              alert(`نتيجة التحقيق: اللاعب ${playersObj[id].name} هو ${resultText}`);
+            } else {
+              roomRef.child(`nightActions/${playerId}`).set({ type: actionType, target: id });
+              alert(`تم تأكيد اختيارك تجاه: ${playersObj[id].name}`);
+            }
+          };
+          actionButtons.appendChild(btn);
+        }
+
+        if (actionType === 'VOTE') {
+          const skipBtn = document.createElement('button');
+          skipBtn.className = 'btn btn-danger';
+          skipBtn.textContent = votes[playerId] === 'SKIP' ? '✓ تم تخطي التصويت' : '⏭ تخطي التصويت';
+          if (votes[playerId] === 'SKIP') skipBtn.classList.add('selected-action');
+          skipBtn.onclick = () => roomRef.child(`votes/${playerId}`).set('SKIP');
+          actionButtons.appendChild(skipBtn);
+        }
+      }
 
       closeRoleBtn.addEventListener('click', () => {
         roleCardModal.classList.add('hidden');
@@ -472,46 +747,79 @@
 
       function showRoleCard(role) {
         const roleImages = {
-          MAFIA: 'assets/images/roles/mafia.png',
-          DOCTOR: 'assets/images/roles/doctor.png',
-          DETECTIVE: 'assets/images/roles/detective.png',
-          CITIZEN: 'assets/images/roles/citizen.png'
+          MAFIA: 'public/assets/images/roles/mafia.png',
+          DOCTOR: 'public/assets/images/roles/doctor.png',
+          DETECTIVE: 'public/assets/images/roles/detective.png',
+          CITIZEN: 'public/assets/images/roles/citizen.png'
         };
-
-        roleCardImg.src = roleImages[role] || 'assets/images/roles/citizen.png';
+        const roleLabels = { MAFIA: 'مافيا', DOCTOR: 'طبيب', DETECTIVE: 'محقق', CITIZEN: 'مواطن' };
         roleCardImg.onerror = () => {
-          roleCardImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='210'><rect width='160' height='210' fill='%237c3aed'/><text x='50%' y='50%' fill='%23fff' font-size='18' dominant-baseline='middle' text-anchor='middle'>بطاقة الدور</text></svg>";
+          roleCardImg.onerror = null;
+          const label = roleLabels[role] || 'دور اللاعب';
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="420"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#312e81"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><rect width="320" height="420" rx="24" fill="url(#g)"/><circle cx="160" cy="130" r="58" fill="#ffffff" fill-opacity=".12" stroke="#fbbf24" stroke-width="5"/><text x="160" y="150" font-size="62" text-anchor="middle" fill="#fff">${role === 'MAFIA' ? '♠' : role === 'DOCTOR' ? '✚' : role === 'DETECTIVE' ? '⌕' : '★'}</text><text x="160" y="270" font-size="34" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#fff">${label}</text><text x="160" y="320" font-size="20" font-family="Arial" text-anchor="middle" fill="#fbbf24">دورك السري</text></svg>`;
+          roleCardImg.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
         };
+        roleCardImg.src = roleImages[role] || roleImages.CITIZEN;
         roleCardName.innerText = translateRole(role);
         roleCardModal.classList.remove('hidden');
       }
 
-      function renderTable(playersList) {
-        playersRing.innerHTML = '';
-        const total = playersList.length;
-        const radiusX = 38;
-        const radiusY = 32;
+      function renderParticipants(playersObj) {
+        const strip = document.getElementById('participants-strip');
+        if (!strip) return;
+        strip.innerHTML = '';
+        Object.entries(playersObj || {}).forEach(([id, p]) => {
+          const chip = document.createElement('span');
+          chip.className = 'participant-chip' + (p.isAlive ? '' : ' dead');
+          chip.textContent = p.name || 'لاعب';
+          chip.style.color = colorForPlayer(id, p.name);
+          strip.appendChild(chip);
+        });
+      }
 
-        playersList.forEach((p, idx) => {
+      function renderTable(playersObj, votesObj = {}) {
+        playersRing.innerHTML = '';
+        const entries = Object.entries(playersObj || {});
+        const total = entries.length;
+        if (!total) return;
+        const radiusX = total > 10 ? 43 : 40;
+        const radiusY = total > 10 ? 39 : 36;
+        const voteCounts = {};
+        for (const voterId in (votesObj || {})) {
+          const target = votesObj[voterId];
+          if (target && target !== 'SKIP') voteCounts[target] = (voteCounts[target] || 0) + 1;
+        }
+
+        entries.forEach(([id, p], idx) => {
           const angle = (idx / total) * (2 * Math.PI) - (Math.PI / 2);
           const left = 50 + radiusX * Math.cos(angle);
           const top = 50 + radiusY * Math.sin(angle);
-
           const seat = document.createElement('div');
-          seat.className = `player-seat ${p.isAlive ? '' : 'dead'}`;
+          seat.className = `player-seat ${p.isAlive ? '' : 'dead'} ${myVoteTarget === id ? 'my-vote' : ''}`;
           seat.style.left = `${left}%`;
           seat.style.top = `${top}%`;
+          seat.dataset.playerId = id;
+
+          const badge = document.createElement('span');
+          badge.className = 'vote-badge' + (voteCounts[id] ? ' visible' : '');
+          badge.textContent = String(voteCounts[id] || 0);
+          badge.title = `${voteCounts[id] || 0} صوت`;
+          seat.appendChild(badge);
 
           const img = document.createElement('img');
           img.className = 'player-avatar';
-          img.src = 'assets/images/players/default.png';
+          img.alt = p.name || 'لاعب';
+          img.src = 'public/assets/images/players/default.png';
+          img.style.borderColor = colorForPlayer(id, p.name);
           img.onerror = () => {
-            img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='45' height='45'><circle cx='22.5' cy='22.5' r='20' fill='%234b5563' stroke='%237c3aed' stroke-width='2'/><text x='50%' y='55%' fill='%23fff' font-size='10' dominant-baseline='middle' text-anchor='middle'>لاعب</text></svg>";
+            img.onerror = null;
+            img.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84"><circle cx="42" cy="42" r="39" fill="#222" stroke="${colorForPlayer(id, p.name)}" stroke-width="5"/><text x="42" y="53" text-anchor="middle" font-size="28" fill="#fff">${escapeHtml((p.name || 'ل').slice(0,1))}</text></svg>`);
           };
 
           const nameDiv = document.createElement('div');
           nameDiv.className = 'player-name';
-          nameDiv.innerText = p.name;
+          nameDiv.style.color = colorForPlayer(id, p.name);
+          nameDiv.innerText = (p.name || 'لاعب') + (p.isAlive ? '' : ' ❌');
 
           seat.appendChild(img);
           seat.appendChild(nameDiv);
@@ -526,16 +834,18 @@
           roomRef.child('chat').push({
             type: 'user',
             sender: currentUser,
+            senderId: playerId,
             text: text
           });
           chatInput.value = '';
         }
       });
 
-      function appendUserMessage(sender, text) {
+      function appendUserMessage(sender, text, senderId = '') {
         const msg = document.createElement('div');
         msg.className = 'chat-msg';
-        msg.innerHTML = `<strong>${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
+        const nameColor = colorForPlayer(senderId, sender);
+        msg.innerHTML = `<strong style="color:${nameColor}">${escapeHtml(sender)}:</strong> ${escapeHtml(text)}`;
         chatMessages.appendChild(msg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
@@ -554,7 +864,7 @@
       }
 
       function translateStage(stage) {
-        const map = { LOBBY: 'الانتظار', ROLE_REVEAL: 'كشف الأدوار', NIGHT: 'الليل 🌙', INVESTIGATION: 'التحقيق 🔍', DISCUSSION: 'النقاش 💬', VOTING: 'التصويت 🗳️', GAME_OVER: 'انتهاء الجولة' };
+        const map = { LOBBY: 'الانتظار', ROLE_REVEAL: 'كشف الأدوار', NIGHT: 'الليل 🌙', DISCUSSION: 'النقاش 💬', VOTING: 'التصويت 🗳️', GAME_OVER: 'انتهاء الجولة' };
         return map[stage] || stage;
       }
 
